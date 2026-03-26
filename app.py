@@ -6,7 +6,7 @@ from algorithms.sma import SMACrossover
 from simulator.engine import SimulatorEngine
 
 # Page Settings
-st.set_page_config(page_title="Crypto Quant Simulator", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Crypto Quant Simulator - created by JSH", page_icon="📈", layout="wide")
 
 # Custom Title and CSS for better aesthetics
 st.markdown("""
@@ -25,7 +25,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">📈 Crypto Quant Simulator</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">📈 Crypto Quant Simulator - created by JSH</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">가상자산 퀀트 알고리즘 백테스트 및 시뮬레이션 플랫폼</div>', unsafe_allow_html=True)
 
 # -------------------- SIDEBAR SETTINGS -------------------- #
