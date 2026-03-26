@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from exchanges.fetcher import fetch_ohlcv
 from algorithms.sma import SMACrossover
+from algorithms.rsi import RSIMomentum
+from algorithms.macd import MACDCrossover
 from simulator.engine import SimulatorEngine
 
 # Page Settings
@@ -44,13 +46,22 @@ coin_symbol = st.sidebar.text_input("2. 가상자산 티커 (Coin Ticker)", valu
 # 3. Strategy Selection
 strategy_name = st.sidebar.selectbox(
     "3. 퀀트 알고리즘 선택 (Algorithm)",
-    ("SMA Crossover (단순이동평균)",)
+    ("SMA Crossover (단순이동평균)", "RSI Momentum (상대강도지수)", "MACD Crossover (이동평균수렴확산)")
 )
 
 # 4. Strategy Parameters
 st.sidebar.subheader("알고리즘 파라미터")
-sma_short = st.sidebar.slider("단기 이동평균 (Short Window)", min_value=5, max_value=50, value=10, step=1)
-sma_long = st.sidebar.slider("장기 이동평균 (Long Window)", min_value=20, max_value=200, value=50, step=5)
+if strategy_name == "SMA Crossover (단순이동평균)":
+    sma_short = st.sidebar.slider("단기 이동평균 (Short Window)", min_value=5, max_value=50, value=10, step=1)
+    sma_long = st.sidebar.slider("장기 이동평균 (Long Window)", min_value=20, max_value=200, value=50, step=5)
+elif strategy_name == "RSI Momentum (상대강도지수)":
+    rsi_period = st.sidebar.slider("RSI 기간 (Period)", min_value=5, max_value=30, value=14, step=1)
+    rsi_overbought = st.sidebar.slider("RSI 과매수 (Overbought)", min_value=60, max_value=90, value=70, step=1)
+    rsi_oversold = st.sidebar.slider("RSI 과매도 (Oversold)", min_value=10, max_value=40, value=30, step=1)
+elif strategy_name == "MACD Crossover (이동평균수렴확산)":
+    macd_fast = st.sidebar.slider("단기 EMA (Fast)", min_value=5, max_value=20, value=12, step=1)
+    macd_slow = st.sidebar.slider("장기 EMA (Slow)", min_value=20, max_value=40, value=26, step=1)
+    macd_signal = st.sidebar.slider("시그널 (Signal)", min_value=5, max_value=15, value=9, step=1)
 
 # 5. Execute button
 run_simulation = st.sidebar.button("🚀 시뮬레이션 실행", type="primary", use_container_width=True)
@@ -67,8 +78,12 @@ if run_simulation:
         st.success("데이터 로드 및 시뮬레이션 완료!")
         
         # Instantiate Strategy Algorithm
-        # Adding more strategies is as simple as importing their module and adding here.
-        strategy = SMACrossover(short_window=sma_short, long_window=sma_long)
+        if strategy_name == "SMA Crossover (단순이동평균)":
+            strategy = SMACrossover(short_window=sma_short, long_window=sma_long)
+        elif strategy_name == "RSI Momentum (상대강도지수)":
+            strategy = RSIMomentum(period=rsi_period, overbought=rsi_overbought, oversold=rsi_oversold)
+        elif strategy_name == "MACD Crossover (이동평균수렴확산)":
+            strategy = MACDCrossover(fast_period=macd_fast, slow_period=macd_slow, signal_period=macd_signal)
         
         # Apply Strategy
         df_with_signal = strategy.generate_signals(df)
@@ -120,7 +135,18 @@ if run_simulation:
         
         # -------------------- DATA TABLE -------------------- #
         st.markdown("### 📋 세부 트레이딩 데이터 및 시그널 로그")
-        display_df = result_df[['open', 'close', 'sma_short', 'sma_long', 'signal', 'market_return', 'strategy_return']].copy()
+        # Displaying different columns based on the active strategy
+        base_cols = ['open', 'close', 'signal', 'market_return', 'strategy_return']
+        if strategy_name == "SMA Crossover (단순이동평균)":
+            extra_cols = ['sma_short', 'sma_long']
+        elif strategy_name == "RSI Momentum (상대강도지수)":
+            extra_cols = ['rsi']
+        elif strategy_name == "MACD Crossover (이동평균수렴확산)":
+            extra_cols = ['macd', 'macd_signal']
+            
+        display_cols = ['open', 'close'] + extra_cols + ['signal', 'market_return', 'strategy_return']
+        
+        display_df = result_df[display_cols].copy()
         # Formatting for readability
         display_cols_formatting = {
             'market_return': "{:.2f}%",
